@@ -2,18 +2,13 @@
 
 ##############################################################################
 #                                                                            #
-# Criteo Toolkit                                                             #
 #                                                                            #
-# www.criteo.com                                                             #
-#                                                                            #
-# Module: lib/ct-crc32                                                       #
+# Module: lib/crc32                                                          #
 #                                                                            #
 # Author: Aurélien LEQUOY                                                    #
-# Email:  a.lequoy@criteo.om                                                #
+# Email:                                                                     #
 #         aurelien@68koncept.com                                             #
 #                                                                            #
-# Doc:    https://confluence.criteois.com/display/~a.lequoy/Criteo+Toolkit   #            
-# Wiki:   http://en.wikipedia.org/wiki/Cyclic_redundancy_check               #
 #                                                                            #
 ##############################################################################
 
