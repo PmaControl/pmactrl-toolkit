@@ -1,8 +1,10 @@
 #!/bin/bash
 
-
 source crc32.bash
 
+set +x
+set -euo pipefail
+IFS=$'\n\t'
 
 VERSION='10.4'
 CLUSTER_NAME='68Koncept'
@@ -62,11 +64,11 @@ done
 function purge {
  export DEBIAN_FRONTEND=noninteractive
  rm -rf /etc/mysql/*
- apt-get -qq -y purge $(dpkg -l | grep mariadb | cut -d ' ' -f 3) > /dev/null
- apt-get -qq -y purge $(dpkg -l | grep mysql | cut -d ' ' -f 3) > /dev/null
- apt-get -qq -y purge $(dpkg -l | grep percona | cut -d ' ' -f 3) > /dev/null
- apt-get -qq -y autoremove > /dev/null
- apt-get -qq clean > /dev/null
+ apt-get -qq -y purge $(dpkg -l | grep mariadb | cut -d ' ' -f 3)
+ apt-get -qq -y purge $(dpkg -l | grep mysql | cut -d ' ' -f 3)
+ apt-get -qq -y purge $(dpkg -l | grep percona | cut -d ' ' -f 3)
+ apt-get -qq -y autoremove
+ apt-get -qq clean
 }
 
 
@@ -91,7 +93,7 @@ function mytest {
 
 if [ -z ${VERSION} ]; 
 then 
-  VERSION='10.1'
+  VERSION='10.4'
 fi
 
 if [ -z ${PASSWORD} ]; 
@@ -177,10 +179,10 @@ EOF
 
 fi
 
-mytest apt-get -m -qq -y update 2>&1
-mytest apt-get -qq -y upgrade > /dev/null
+mytest apt-get -m -qq -y update
+mytest apt-get -qq -y upgrade
 
-mytest apt-get -qq -y install software-properties-common > /dev/null
+mytest apt-get -qq -y install software-properties-common
 
 
 export DEBIAN_FRONTEND=noninteractive
@@ -196,7 +198,7 @@ else
 	debconf-set-selections <<< "mariadb-server-${VERSION} mysql-server/root_password password $PASSWORD"
 	debconf-set-selections <<< "mariadb-server-${VERSION} mysql-server/root_password_again password $PASSWORD"
 	
-	mytest apt-get -qq -y install mariadb-server-${VERSION} > /dev/null
+	mytest apt-get -qq -y install mariadb-server-${VERSION}
 fi
 
 
@@ -256,12 +258,12 @@ fi
 mytest service mysql stop > /dev/null
 #mytest /etc/init.d/mysql stop > /dev/null
 
-mkdir -p $DATADIR/log
-mkdir -p $DATADIR/backup
-mkdir -p $DATADIR/data
-mkdir -p $DATADIR/binlog
+mkdir -p "${DATADIR}/log"
+mkdir -p "${DATADIR}/backup"
+mkdir -p "${DATADIR}/data"
+mkdir -p "${DATADIR}/binlog"
 
-cp -pr /var/lib/mysql/* $DATADIR/data
+cp -pr /var/lib/mysql/* "${DATADIR}/data"
 
 chown mysql:mysql -R $DATADIR
 
@@ -349,7 +351,7 @@ log_error=${DATADIR}/log/error.log
 #
 # Instead of skip-networking the default is now to listen only on
 # localhost which is more compatible and is not less secure.
-#bind-address           = 127.0.0.1
+# bind-address           = 127.0.0.1
 #
 # * Fine Tuning
 #
