@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source crc32.bash
+source lib/crc32-string.sh
 
 set +x
 set -euo pipefail
@@ -232,10 +232,10 @@ version=`mysql -u root -p$PASSWORD -se "SELECT VERSION()" | sed -n 1p | grep -Po
 
 ip=`hostname -I`
 
-echo "IP : $ip"
+echo "IP : ${ip}"
 
 #crc32=`mysql -u root -p$PASSWORD -e "SELECT CRC32('$ip')"`
-crc32=`crc32 {$ip}`
+crc32=$(crc32-string ${ip})
 
 #echo "crc32 : $crc32"
 
