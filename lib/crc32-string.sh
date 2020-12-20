@@ -4,6 +4,8 @@
 #
 # Author: Aurélien LEQUOY
 # Email:  aurelien@68koncept.com
+#
+# wiki : http://en.wikipedia.org/wiki/Cyclic_redundancy_check
 
 OLDIFS=$IFS
 
@@ -59,12 +61,7 @@ function __crc32_calc {
     done
 
     crc=$(( crc ^ 0xFFFFFFFF ))
-
-    if [[ "${#end}" -eq 0 ]]; then
-        printf "0x%08x " "${crc}"
-    else
-        echo -n "${crc}"
-    fi
+    echo -n "${crc}"
 }
 
 function crc32-string {
