@@ -73,13 +73,13 @@ function crc32-string {
 
 if [[ "$#" -eq 1 ]]; then
     crc32-string "$1"
-else
-    echo "Invalid argument error"
-    echo ""
-    echo "Test"
-    echo "----"
-    echo "crc32-string 254wsdfhtswd =>     $(crc32-string 254wsdfhtswd)"
-    echo "previous line should be equal to 2644672520"
+#else
+#    echo "Invalid argument error"
+#    echo ""
+#    echo "Test"
+#    echo "----"
+#    echo "crc32-string 254wsdfhtswd =>     $(crc32-string 254wsdfhtswd)"
+#    echo "previous line should be equal to 2644672520"
 fi
 
 IFS=$OLDIFS

@@ -2,11 +2,10 @@
 
 source lib/crc32-string.sh
 
-set +x
 set -euo pipefail
 IFS=$'\n\t'
 
-VERSION='10.4'
+VERSION='10.5'
 CLUSTER_NAME='68Koncept'
 CLUSTER_MEMBER=''
 PASSWORD=''
@@ -17,7 +16,7 @@ PURGE='false'
 DATADIR='/var/lib/mysql'
 REPO_LOCAL='false'
 BOOTSTRAP='false'
-
+DEBIAN_PASSWORD=$(date +%s | sha256sum | base64 | head -c 32 ; echo)
 
 while getopts 'hp:n:m:xv:sgcud:rbx:' flag; do
   case "${flag}" in
@@ -29,7 +28,7 @@ while getopts 'hp:n:m:xv:sgcud:rbx:' flag; do
         echo "-p PASSWORD             specify root password for mariadb"
         echo "-n name                 specify the name of galera cluster"
         echo "-m ip1,ip2,ip3          specify the list of member of cluster"
-        echo "-v 10.1                 specify the version of MariaDB"
+        echo "-v 10.5                 specify the version of MariaDB"
         echo "-s                      specify the hard drive are SSD"
         echo "-g                      specify to activate and make good set up for Spider"
         echo "-c                      set galera cluster ON"
@@ -64,9 +63,9 @@ done
 function purge {
  export DEBIAN_FRONTEND=noninteractive
  rm -rf /etc/mysql/*
- apt-get -qq -y purge $(dpkg -l | grep mariadb | cut -d ' ' -f 3)
- apt-get -qq -y purge $(dpkg -l | grep mysql | cut -d ' ' -f 3)
- apt-get -qq -y purge $(dpkg -l | grep percona | cut -d ' ' -f 3)
+ apt-get -qq -y purge "$(dpkg -l | grep mariadb | cut -d ' ' -f 3)"
+ apt-get -qq -y purge "$(dpkg -l | grep mysql | cut -d ' ' -f 3)"
+ apt-get -qq -y purge "$(dpkg -l | grep percona | cut -d ' ' -f 3)"
  apt-get -qq -y autoremove
  apt-get -qq clean
 }
@@ -83,7 +82,7 @@ function mytest {
     "$@"
     local status=$?
     if [ $status -ne 0 ]; then
-        echo "error with $@" >&2
+        echo "error with $*" >&2
 
 	rm /etc/apt/sources.list.d/mariadb.list
         exit 1;
@@ -91,12 +90,12 @@ function mytest {
     return $status
 }
 
-if [ -z ${VERSION} ]; 
+if [[ -z ${VERSION} ]]; 
 then 
-  VERSION='10.4'
+  VERSION='10.5'
 fi
 
-if [ -z ${PASSWORD} ]; 
+if [[ -z ${PASSWORD} ]]; 
 then 
   echo "option -p required (password)"
   echo "for help -h"
@@ -110,10 +109,10 @@ echo "VERSION = $VERSION"
 echo "DATADIR = $DATADIR"
 
 
-OS=`lsb_release -cs`
+OS=$(lsb_release -cs)
 
-DISTRIB=`lsb_release -si`
-DISTRIB=`echo "$DISTRIB" | tr '[:upper:]' '[:lower:]'`
+DISTRIB=$(lsb_release -si)
+DISTRIB=$(echo "$DISTRIB" | tr '[:upper:]' '[:lower:]')
 
 case "$OS" in
     "jessie")      ;;
@@ -162,7 +161,7 @@ if [ $REPO_LOCAL = "false" ]
 	mytest apt-get -m -qq -y update 2> /tmp/keymissing; 
 	for key in $(grep "NO_PUBKEY" /tmp/keymissing |sed "s/.*NO_PUBKEY //"); 
 	do 
-	  echo -e "\nProcessing key: $key"; 
+	  echo -e "\\nProcessing key: $key"; 
 	  wget -q -O- "http://keyserver.ubuntu.com/pks/lookup?op=get&search=$key" | apt-key add -
 	  #gpg --keyserver subkeys.pgp.net --recv $key && gpg --export --armor $key | apt-key add -; 
 	done
@@ -210,12 +209,12 @@ IFS=',' read -r -a array <<< "$CLUSTER_MEMBER"
 
 for server in "${array[@]}"
 do
-    mytest mysql -u root -p$PASSWORD -e "GRANT ALL ON *.* TO sst@'$server' IDENTIFIED BY 'QSEDWGRg133' WITH GRANT OPTION;" 
+    mytest mysql -u root -p"${PASSWORD}" -e "GRANT ALL ON *.* TO sst@'$server' IDENTIFIED BY 'QSEDWGRg133' WITH GRANT OPTION;" 
 done
 
-mytest mysql -u root -p$PASSWORD -e "GRANT ALL ON *.* TO dba@'%' IDENTIFIED BY '$PASSWORD' WITH GRANT OPTION; "
+mytest mysql -u root -p"${PASSWORD}" -e "GRANT ALL ON *.* TO dba@'%' IDENTIFIED BY '$PASSWORD' WITH GRANT OPTION; "
 
-mytest mysql -u root -p$PASSWORD -e "GRANT ALL ON *.* TO root@'localhost' IDENTIFIED BY '$PASSWORD' WITH GRANT OPTION;"
+mytest mysql -u root -p"${PASSWORD}" -e "GRANT ALL ON *.* TO root@'localhost' IDENTIFIED BY '$PASSWORD' WITH GRANT OPTION;"
 
 
 
@@ -223,36 +222,36 @@ echo -e "[client]
 user=root
 password='$PASSWORD'" > /root/.my.cnf
 
-version=`mysql -u root -p$PASSWORD -se "SELECT VERSION()" | sed -n 1p | grep -Po '10\.([0-9]{1,2})'`
+#version=$(mysql -u root -p$PASSWORD -se "SELECT VERSION()" | sed -n 1p | grep -Po '10\.([0-9]{1,2})')
 
 
 
 
 #ip=`ifconfig | grep -Eo 'inet (a[d]{1,2}r:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | head -n 1`
 
-ip=`hostname -I`
+ip=$(hostname -I)
 
 echo "IP : ${ip}"
 
 #crc32=`mysql -u root -p$PASSWORD -e "SELECT CRC32('$ip')"`
-crc32=$(crc32-string ${ip})
+crc32=$(crc32-string "${ip}")
 
 #echo "crc32 : $crc32"
 
-id_server=`echo -n $crc32 | cut -d ' ' -f 2 | tr -d '\n'`
+id_server=$(echo -n "${crc32}" | cut -d ' ' -f 2 | tr -d '\n')
 
 echo "ID Server : ${id_server}"
 
-hostname=`hostname`
+hostname=$(hostname)
 
 innodb_buffer_pool_size='512M'
-memtotal=`grep MemTotal /proc/meminfo | awk '{print $2}' | xargs -I {} echo "scale=4; {}/1024^2" | bc`
+memtotal=$(grep MemTotal /proc/meminfo | awk '{print $2}' | xargs -I {} echo "scale=4; {}/1024^2" | bc)
 
-new_buffer=`echo "$memtotal * 0.75" | bc -l`
+new_buffer=$(echo "${memtotal} * 0.75" | bc -l)
 
 
-if [ memtotal > 4 ];then
-  innodb_buffer_pool_size=`echo $new_buffer | awk '{print ($0-int($0)<0.499)?int($0):int($0)+1}'`
+if [[ $memtotal -gt 4 ]];then
+	innodb_buffer_pool_size=$(echo "${new_buffer}" | awk '{print ($0-int($0)<0.499)?int($0):int($0)+1}')
 fi
 
 mytest service mysql stop > /dev/null
@@ -265,7 +264,7 @@ mkdir -p "${DATADIR}/binlog"
 
 cp -pr /var/lib/mysql/* "${DATADIR}/data"
 
-chown mysql:mysql -R $DATADIR
+chown mysql:mysql -R "${DATADIR}"
 
 # install xtrabackup
 
@@ -577,7 +576,7 @@ EOF
 
 
 
-if [ -n $DEBIAN_PASSWORD ]
+if [[ -n $DEBIAN_PASSWORD ]]
 then
 
 cat > /etc/mysql/debian.cnf << EOF
@@ -608,9 +607,9 @@ mytest apt-get -qq install -y netcat tar socat lsof > /dev/null
 
 if [ $BOOTSTRAP = 'true' ]
 then 
-	mytest galera_new_cluster 2>&1 > /dev/null
+	{ mytest galera_new_cluster > /dev/null; } 2>&1
 else
-	mytest service mysql start 2>&1 > /dev/null
+	{ mytest service mysql start > /dev/null; } 2>&1
 	#mytest /etc/init.d/mysql start 2>&1 > /dev/null
 fi
 
