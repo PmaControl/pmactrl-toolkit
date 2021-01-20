@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Module: lib/crc32
-#
+
 # Author: Aurélien LEQUOY
 # Email:  aurelien@68koncept.com
-#
+
 # wiki : http://en.wikipedia.org/wiki/Cyclic_redundancy_check
 
 OLDIFS=$IFS
@@ -64,7 +64,7 @@ function __crc32_calc {
     echo -n "${crc}"
 }
 
-function crc32-string {
+function 6t-crc32-string {
     ctx=0x00000000
     end="END"
     crc=$(echo -n "${1}" | od -v -tx1 -An | __crc32_calc "${ctx}" "${end}")
@@ -72,7 +72,7 @@ function crc32-string {
 }
 
 if [[ "$#" -eq 1 ]]; then
-    crc32-string "$1"
+    6t-crc32-string "$1"
 #else
 #    echo "Invalid argument error"
 #    echo ""

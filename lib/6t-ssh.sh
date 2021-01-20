@@ -1,14 +1,13 @@
 #!/bin/bash
 
 # Module: lib/ssh
-#                                                                            #
-# Author: Aurélien LEQUOY                                                    #
-# Email:  aurelien@68koncept.com                                             #
-#                                                                            #
+
+# Author: Aurélien LEQUOY
+# Email:  aurelien@68koncept.com
 
 #pipe to connect simpply in ssh
 
-function execute() {
+function 6t_ssh() {
 
 	if [ -z "$1" ]
 	then
@@ -22,7 +21,8 @@ function execute() {
 		exit 2;
 	fi
 
-	echo "[ssh] $1 > $2"
+	date=$(date +"%F %H:%M:%S")
+	echo "[${date}][ssh] $1 > $2"
 
 	# need add case where password is required for sudo
 	# with key ssh
@@ -56,6 +56,42 @@ function execute() {
 		fi
 	fi
 
+	cat ${tmp_file} >> /tmp/ssh
+
 	res=$(cat $tmp_file)
 }
 
+
+# try all connection before start script
+function 6t_test_ssh()
+{
+	if [[ DEBUG == true ]]; then
+		debug 'echo "Test all connections :"'
+		debug 'echo ""'
+	fi
+
+	#test ssh's connection for all servers
+
+	6t_ssh "${1}" 'whoami'
+	
+	res="${res//$'\r'}"
+	#echo "good : ${res//$'\r'}"
+
+	if [[ "${res}" != "root" ]];
+	then
+		debug "echo \"'root' | tr -dc '[:print:]' | od -c\""
+		debug "echo ${res} | cat -v"
+		debug "echo \"res : Z${res}Z\""
+
+		echo "[ssh][ERROR] Cannot connect in root (user: ${res}) to ${server}"
+		exit 14
+	fi
+}
+
+
+function 6t_ssh_display()
+{
+	6t_ssh "${1}"
+
+	echo $res
+}

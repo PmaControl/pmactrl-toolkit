@@ -44,6 +44,7 @@ if [[ "$#" -eq 0 ]]; then
     exit 1;
 fi
 
+#test if name is a valid hostname
 #res=$(echo "${NEWHOSTNAME}" | grep -E '^[a-z0-9][a-z0-9-]+$')
 #if [[ -z ${res} ]]; then
 #    echo "Error"
@@ -65,4 +66,3 @@ hostnamectl set-hostname "${NEWHOSTNAME}"
 
 # to take effect immediatly in shell
 bash
-
