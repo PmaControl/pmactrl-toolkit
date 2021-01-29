@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source lib/crc32-string.sh
+# source lib/crc32-string.sh
 
 set -euo pipefail
 IFS=$'\n\t'
@@ -234,9 +234,10 @@ ip=$(hostname -I)
 echo "IP : ${ip}"
 
 #crc32=`mysql -u root -p$PASSWORD -e "SELECT CRC32('$ip')"`
-crc32=$(crc32-string "${ip}")
 
-#echo "crc32 : $crc32"
+crc32=$(echo -n "${ip}" | gzip -c | tail -c8 | hexdump -n4 -e '"%u"')
+
+echo "crc32 : $crc32"
 
 id_server=$(echo -n "${crc32}" | cut -d ' ' -f 2 | tr -d '\n')
 
