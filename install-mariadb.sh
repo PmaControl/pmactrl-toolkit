@@ -148,6 +148,12 @@ echo "OS = $OS"
 #import mariadb key
 
 
+apt -y install lsb-release
+apt -y install wget
+apt -y install gnupg2
+apt -y install bc
+
+
 
 if [ $REPO_LOCAL = "false" ]
 	then
